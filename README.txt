@@ -3,8 +3,26 @@ a touch-sensitive .WAV player, capable of taking input from four capacitive
 sensors (implemented by Adafruit Gemma-M0 wearable microcontrollers) and
 playing up to four simulaneous .WAV tracks.
 
-A number of customizable features provide a wide variety of behaviors. See
-Tactile.h for details.
+A key feature of this library is that you don't have to write an Arduino
+sketch at all. The following trivial sketch is a complete, working version
+of a touch-sensitive .WAV player.
+
+    #include <Arduino.h>
+    #include "Tactile.h"
+
+    Tactile *t;
+
+    void setup() {
+      t = Tactile::setup();
+    }
+
+    void loop() {
+      t->loop();
+    }
+
+A number of customizable features provide a wide variety of behaviors, and
+can be added to the setup() function. See Tactile.h for details. Here is a
+summary:
 
 LOG LEVEL: How much is printed on the Arduino Serial Monitor window?
   0: nothing
