@@ -40,23 +40,25 @@ class Tactile
   void loop(void);
 
   void setLogLevel(int level);
-  void setVolume(int percent);
-  void setVolume(int leftPercent, int rightPercent);
 
   void setTouchReleaseThresholds(int touch, int release);
+  void setTouchReleaseThresholds(int sensorNumber, int touch, int release);
+  void ignoreSensor(int sensorNumber, bool ignore);
+  
   void setTouchToStop(bool on);                // true == touch-on-touch-off (normally touch-on-release-off)
   void setMultiTrackMode(bool on);             // true == enable multiple simultaneous tracks
-
   void setContinueTrackMode(bool on);          // true == 2nd touch continues track where it left off
   void setInactivityTimeout(int seconds);      // continueTrackMode: reset to beginning if idle this long
 
   void setPlayRandomTrackMode(bool on);        // true == random selection from sensor's directory
 
+  void setVolume(int percent);
   void setProximityAsVolumeMode(bool on);      // Proximity controls volume, or fixed volume
   void setProximityMultiplier(int sensorNumber, float m);  // 1.0 is no amplification, more increases sensitivity
-  void setAveragingStrength(int samples);      // more smooths signal, default is 200
   void setFadeInTime(int milliseconds);
   void setFadeOutTime(int milliseconds);
+
+  void setAveragingStrength(int samples);      // more smooths signal, default is 200
 
   const char *getTrackName(int trackNum);
   
@@ -66,8 +68,8 @@ class Tactile
   TactileAudio   *_ta;
   TactileFileManager *_fm;
 
-  float    _touchThreshold;
-  float    _releaseThreshold;
+  float    _touchThreshold[NUM_SENSORS];
+  float    _releaseThreshold[NUM_SENSORS];
   bool     _touchToStop;
   bool     _multiTrack;
   bool     _continueTrack;

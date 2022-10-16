@@ -43,7 +43,6 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
   // creating the TactileSensors object dynamically during the Arduino setup()
   // function, we avoid those problems.
 
-
   TactileSensors* t = new TactileSensors(tc);
 
   for (int sensorNumber = FIRST_SENSOR; sensorNumber <= LAST_SENSOR; sensorNumber++) {
@@ -51,11 +50,12 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
     t->_lastSensorStatus[sensorNumber] = IS_RELEASED;
     t->_lastSensorPseudoStatus[sensorNumber] = IS_RELEASED;
     t->_filteredSensorValue[sensorNumber] = 0.0;
+    t->_ignoreSensor[sensorNumber] = false;
     t->setProximityMultiplier(sensorNumber, 1.0);
+    t->setTouchReleaseThresholds(sensorNumber, 95.0, 65.0);
   }
   t->_lastSensorTouched = -1;
 
-  t->setTouchReleaseThresholds(95, 65);
   t->setAveragingStrength(200);
 
   return t;
@@ -79,24 +79,35 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
  ----------------------------------------------------------------------*/
 
 void TactileSensors::setTouchReleaseThresholds(float touchThreshold, float releaseThreshold) {
+  for (int s = 0; s < NUM_SENSORS; s++)
+    setTouchReleaseThresholds(s, touchThreshold, releaseThreshold);
+}
+
+void TactileSensors::setTouchReleaseThresholds(int sensorNumber, float touchThreshold, float releaseThreshold) {
 
   if (touchThreshold < 0)
-    _touchThreshold = 1;
+    _touchThreshold[sensorNumber] = 1;
   else if (touchThreshold > 100)
-    _touchThreshold = 100;
+    _touchThreshold[sensorNumber] = 100;
   else
-    _touchThreshold = touchThreshold;
+    _touchThreshold[sensorNumber] = touchThreshold;
 
-  if (releaseThreshold >= _touchThreshold)
-    _releaseThreshold = _touchThreshold - 1;
+  if (releaseThreshold >= _touchThreshold[sensorNumber])
+    _releaseThreshold[sensorNumber] = _touchThreshold[sensorNumber] - 1;
   else if (releaseThreshold < 0)
-    _releaseThreshold = 0;
+    _releaseThreshold[sensorNumber] = 0;
   else
-    _releaseThreshold = releaseThreshold;
+    _releaseThreshold[sensorNumber] = releaseThreshold;
 
-  _tc->logAction2("TactileSensors: Touch threshold: ", _touchThreshold);
-  _tc->logAction2("TactileSensors: Release threshold: ", _releaseThreshold);
+  _tc->logAction2("TactileSensors: Touch threshold: ", _touchThreshold[sensorNumber]);
+  _tc->logAction2("TactileSensors: Release threshold: ", _releaseThreshold[sensorNumber]);
 }  
+
+void TactileSensors::ignoreSensor(int sensorNumber, bool ignore) {
+  if (sensorNumber < 0 || sensorNumber >= NUM_SENSORS)
+    return;
+  _ignoreSensor[sensorNumber] = ignore;
+}
 
 void TactileSensors::setTouchToggleMode(bool on) {
   _touchToggleMode = on;
@@ -115,14 +126,14 @@ int TactileSensors::getTouchStatus(int sensorStatus[], int sensorChanges[]) {
   for (int i = FIRST_SENSOR; i <= LAST_SENSOR; i++) {
     sensorChanges[i] = TOUCH_NO_CHANGE;
     float prox = getProximityPercent(i);
-    if (prox >= _touchThreshold) {
+    if (prox >= _touchThreshold[i]) {
       sensorStatus[i] = IS_TOUCHED;
       if (_lastSensorStatus[i] != sensorStatus[i]) {
         sensorChanges[i] = NEW_TOUCH;
         numChanges++;
         _lastActionTime[i] = millis();
       }
-    } else if (prox < _releaseThreshold) {
+    } else if (prox < _releaseThreshold[i]) {
       sensorStatus[i] = IS_RELEASED;
       if (_lastSensorStatus[i] != sensorStatus[i]) {
         sensorChanges[i] = NEW_RELEASE;
@@ -192,6 +203,8 @@ void TactileSensors::setProximityMultiplier(int sensorNumber, float m) {
 }
 
 float TactileSensors::getProximityPercent(int sensorNumber) {
+  if (_ignoreSensor[sensorNumber])
+    return 0.0;
   sensorNumber = _checkSensorRange(sensorNumber);
   int p = analogRead(_sensorNumberToPinNumber[sensorNumber]);
   if (_averagingSamples > 0) {

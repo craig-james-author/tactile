@@ -46,6 +46,8 @@ class TactileSensors
 
   // Touch and proximity sensing
   void  setTouchReleaseThresholds(float touchThreshold, float releaseThreshold);
+  void  setTouchReleaseThresholds(int sensorNumber, float touchThreshold, float releaseThreshold);
+  void  ignoreSensor(int sensorNumber, bool ignore);
   void  setTouchToggleMode(bool on);
   int   getTouchStatus(int sensorStatus[], int sensorChanges[]);
   float getProximityPercent(int sensorNumber);
@@ -63,8 +65,9 @@ class TactileSensors
 
   // Touch sensors
   int   _lastSensorTouched;
-  float _touchThreshold;          // Percent, 0..100
-  float _releaseThreshold;
+  float _touchThreshold[NUM_SENSORS];          // Percent, 0..100
+  float _releaseThreshold[NUM_SENSORS];
+  bool  _ignoreSensor[NUM_SENSORS];
   int   _lastSensorStatus[NUM_SENSORS];
   int   _lastSensorPseudoStatus[NUM_SENSORS];    // for touchToggleMode only
   unsigned long _lastActionTime[NUM_SENSORS];

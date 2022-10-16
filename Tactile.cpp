@@ -47,6 +47,11 @@ void Tactile::setVolume(int percent) {
 }
 
 void Tactile::setTouchReleaseThresholds(int touch, int release) {
+  for (int s = 0; s < NUM_SENSORS; s++)
+    setTouchReleaseThresholds(s, touch, release);
+}
+
+void Tactile::setTouchReleaseThresholds(int sensorNumber, int touch, int release) {
   if (touch > 100)
     touch = 100;
   else if (touch < 1)
@@ -55,9 +60,13 @@ void Tactile::setTouchReleaseThresholds(int touch, int release) {
     release = touch - 1;
   else if (release < 0)
     release = 0;
-  _touchThreshold = touch;
-  _releaseThreshold = release;
-  _ts->setTouchReleaseThresholds((float)touch, (float)release);
+  _touchThreshold[sensorNumber] = touch;
+  _releaseThreshold[sensorNumber] = release;
+  _ts->setTouchReleaseThresholds(sensorNumber, (float)touch, (float)release);
+}
+
+void Tactile::ignoreSensor(int sensorNumber, bool ignore) {
+  _ts->ignoreSensor(sensorNumber, ignore);
 }
 
 void Tactile::setTouchToStop(boolean on) {
@@ -134,6 +143,7 @@ Tactile* Tactile::setup() {
   t->setInactivityTimeout(0);
   t->setPlayRandomTrackMode(false);
   t->setProximityAsVolumeMode(false);
+  t->setTouchReleaseThresholds(95, 65);
 
   t->_ledCycle = 0;
   t->_trackCurrentlyPlaying = -1;
@@ -296,7 +306,7 @@ void Tactile::_proximityLoop() {
     if (_multiTrack || sensorNumber == maxSensorNumber) {
       float sensorValue = sensorValues[sensorNumber];
       int playing = _ta->isPlaying(sensorNumber) && !_ta->isPaused(sensorNumber);
-      if (sensorValue > _touchThreshold) {
+      if (sensorValue > _touchThreshold[sensorNumber]) {
         if (!playing) {
           if (_ta->isPaused(sensorNumber)) {
             _ta->resumeTrack(sensorNumber);
@@ -308,7 +318,7 @@ void Tactile::_proximityLoop() {
         }
         _ta->setVolume(sensorNumber, sensorValue);
         _lastActionTime = millis();
-      } else if (sensorValue < _releaseThreshold) {
+      } else if (sensorValue < _releaseThreshold[sensorNumber]) {
         if (playing) {
           if (_continueTrack) {
             _ta->pauseTrack(sensorNumber);
