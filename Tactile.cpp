@@ -98,9 +98,11 @@ void Tactile::setAveragingStrength(int samples) {
 }
 
 void Tactile::setProximityAsVolumeMode(boolean on) {
-  _ta->setFadeInTime(0);        // Fade in/out isn't compatible with proximity-as-volume
-  _ta->setFadeOutTime(0);
   _useProximityAsVolume = on;
+  if (on) {
+    _ta->setFadeInTime(0);        // Fade in/out isn't compatible with proximity-as-volume
+    _ta->setFadeOutTime(0);
+  }
 }
 
 void Tactile::setFadeInTime(int milliseconds) {

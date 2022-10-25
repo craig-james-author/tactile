@@ -375,7 +375,7 @@ void TactileAudio::_doFadeInOut(int trackNumber)
       if (newVolumePercent >= targetVol) {
 	newVolumePercent = targetVol;
       }
-      // _tc->logAction2("TactileAudio: Fade-in, set volume: ", newVolumePercent);
+      _tc->logAction2("TactileAudio: Fade-in, set volume: ", newVolumePercent);
       _setActualVolume(trackNumber, newVolumePercent);
     }
   }

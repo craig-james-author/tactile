@@ -150,14 +150,17 @@ int TactileSensors::getTouchStatus(int sensorStatus[], int sensorChanges[]) {
 
     if (_touchToggleMode) {
       if (sensorChanges[i] == NEW_RELEASE) {
+        sensorStatus[i] = _lastSensorPseudoStatus[i];
         sensorChanges[i] = TOUCH_NO_CHANGE;             // ignore all releases
         numChanges--;
       } else if (sensorChanges[i] == NEW_TOUCH) {
         if (_lastSensorPseudoStatus[i] == IS_TOUCHED) { // alternate touches converted to toggle on/off
-          sensorChanges[i] = IS_RELEASED;
+          sensorChanges[i] = NEW_RELEASE;
+          sensorStatus[i] = IS_RELEASED;
           _lastSensorPseudoStatus[i] = IS_RELEASED;
         } else {
           sensorChanges[i] = NEW_TOUCH;
+          sensorStatus[i] = IS_TOUCHED;
           _lastSensorPseudoStatus[i] = IS_TOUCHED;
         }
       }

@@ -91,6 +91,8 @@ TactileFileManager::TactileFileManager(TactileCPU *tc) {
 
 int TactileFileManager::_readDirIntoStringArray(File *dir, int subDirNum)
 {
+  char tmpNames[NUM_TRACKS_IN_SUBDIR][MAX_FILE_NAME];
+
   if (_tc->getLogLevel() > 1) {
     Serial.print("TactileFileManager::_readDirIntoStringArray(");
     if (!dir)
@@ -101,8 +103,10 @@ int TactileFileManager::_readDirIntoStringArray(File *dir, int subDirNum)
     Serial.print(subDirNum);
     Serial.println(")");
   }
+
+  // Read the directory, copy "eligible" filenames (.WAV) to a temporary array
   File file;
-  int fileNum = 0;
+  int numFiles = 0;
   char name[MAX_FILE_NAME+1];
   while (file = dir->openNextFile()) {
     strncpy(name, file.name(), MAX_FILE_NAME);
@@ -118,15 +122,49 @@ int TactileFileManager::_readDirIntoStringArray(File *dir, int subDirNum)
         || name[0] == '.'
         || (strcmp(name + len - 4, ".WAV") != 0 && strcmp(name + len - 4, ".wav") != 0))
       continue;
-    if (subDirNum < 0)
-      strcpy(_fileNames[fileNum], name);
-    else
-      strcpy(_subDirFileNames[subDirNum][fileNum], name);
-    fileNum++;
-    if (fileNum >= NUM_TRACKS)
+    strcpy(tmpNames[numFiles], name);
+    numFiles++;
+    if (numFiles >= NUM_TRACKS_IN_SUBDIR) {
+      _tc->logAction("TactileFileManager: WARNING: too many files in this directory: ", NUM_TRACKS_IN_SUBDIR);
       break;
+    }
   }
-  return fileNum;
+
+  // Now copy to the destination in sorted order (uses a trivial N^2 sort).
+  int destFileNum = 0;
+  char minName[MAX_FILE_NAME+1];
+  while (1) {
+
+    // Scan the list of names, find the lowest one.
+    minName[0] = 0;
+    int minNameIndex = -1;
+    for (int fileNum = 0; fileNum < numFiles; fileNum++) {
+      if (strlen(tmpNames[fileNum]) > 0 && (strlen(minName) == 0 || strcmp(tmpNames[fileNum], minName) < 0)) {
+        strcpy(minName, tmpNames[fileNum]);
+        minNameIndex = fileNum;
+        Serial.print("TactileFileManager: minName: ");
+        Serial.print(minName);
+        Serial.print(", ");
+        Serial.println(fileNum);
+      }
+    }
+
+    // No names left? All done.
+    if (minNameIndex == -1)
+      break;
+
+    // Found the lowest name, copy to destination
+    if (subDirNum < 0)
+      strcpy(_fileNames[destFileNum], minName);
+    else
+      strcpy(_subDirFileNames[subDirNum][destFileNum], minName);
+    destFileNum++;
+
+    // Take it out of the list
+    tmpNames[minNameIndex][0] = 0;
+  }
+
+  return numFiles;
 }
 
 
