@@ -23,8 +23,15 @@
 | This class is essentially a full Arduino sketch wrapped up in a
 | C++ class, including the setup() and loop() methods. The only thing
 | needed to program a fully functioning app is to specify the options
-| (behavior) desired, and forward the Arduion setup() and loop()
+| (behavior) desired, and forward the Arduino setup() and loop()
 | functions to this class.
+|
+| NOTE: For this "wrapper" class, all sensor numbers go from 1 to 4 rather
+|       than the internal numbering of 0 to 3. That is, incoming API calls
+|       subtract 1 from the track number, and outgoing results (e.g.
+|       logging to the serial monitor) add 1 to the track number. This
+|       it to make it more "natural" for non-programmers, and to match
+|       the numbering of the E1..E4 subdirectories used for random tracks.
 |
 +======================================================================*/
 
@@ -48,7 +55,8 @@ void Tactile::setTouchReleaseThresholds(int touch, int release) {
     setTouchReleaseThresholds(s, touch, release);
 }
 
-void Tactile::setTouchReleaseThresholds(int sensorNumber, int touch, int release) {
+void Tactile::setTouchReleaseThresholds(int externSensorNumber, int touch, int release) {
+  int sensorNumber = externSensorNumber - 1;
   if (touch > 100)
     touch = 100;
   else if (touch < 1)
@@ -62,7 +70,8 @@ void Tactile::setTouchReleaseThresholds(int sensorNumber, int touch, int release
   _ts->setTouchReleaseThresholds(sensorNumber, (float)touch, (float)release);
 }
 
-void Tactile::ignoreSensor(int sensorNumber, bool ignore) {
+void Tactile::ignoreSensor(int externSensorNumber, bool ignore) {
+  int sensorNumber = externSensorNumber - 1;
   _ts->ignoreSensor(sensorNumber, ignore);
 }
 
@@ -89,7 +98,8 @@ void Tactile::setPlayRandomTrackMode(boolean on) {
   _ta->setPlayRandomTrackMode(on);
 }
 
-void Tactile::setProximityMultiplier(int sensorNumber, float m) {
+void Tactile::setProximityMultiplier(int externSensorNumber, float m) {
+  int sensorNumber = externSensorNumber - 1;
   _ts->setProximityMultiplier(sensorNumber, m);
 }
 
@@ -185,14 +195,14 @@ void Tactile::_touchLoop() {
           if (!_continueTrack)
             _ta->cancelFades(sensorNumber);
           _ta->startTrack(sensorNumber);
-          _tc->logAction("start track ", sensorNumber);
+          _tc->logAction("start track ", sensorNumber+1);
         } else {
           if (_ta->isPaused(sensorNumber)) {
             _ta->resumeTrack(sensorNumber);
-            _tc->logAction("resume track ", sensorNumber);
+            _tc->logAction("resume track ", sensorNumber+1);
           } else {
             _ta->startTrack(sensorNumber);
-            _tc->logAction("restart track (was paused?) ", sensorNumber);
+            _tc->logAction("restart track (was paused?) ", sensorNumber+1);
           }
         }
       }
@@ -200,10 +210,10 @@ void Tactile::_touchLoop() {
         if (isPlaying) {
           if (_continueTrack) {
             _ta->pauseTrack(sensorNumber);
-            _tc->logAction("pause track ", sensorNumber);
+            _tc->logAction("pause track ", sensorNumber+1);
           } else {
             _ta->stopTrack(sensorNumber);
-            _tc->logAction("stop track ", sensorNumber);
+            _tc->logAction("stop track ", sensorNumber+1);
           }
         }
       }
@@ -234,10 +244,10 @@ void Tactile::_touchLoop() {
         && sensorChanged[_trackCurrentlyPlaying] == NEW_RELEASE) {
       if (_continueTrack) {
         _ta->pauseTrack(_trackCurrentlyPlaying);
-        _tc->logAction("pause track ", _trackCurrentlyPlaying);
+        _tc->logAction("pause track ", _trackCurrentlyPlaying+1);
       } else {
         _ta->stopTrack(_trackCurrentlyPlaying);
-        _tc->logAction("stop track ", _trackCurrentlyPlaying);
+        _tc->logAction("stop track ", _trackCurrentlyPlaying+1);
       }
       _trackCurrentlyPlaying = -1;
     }
@@ -254,12 +264,12 @@ void Tactile::_touchLoop() {
       if (sensorStatus[sensorNumber] == IS_TOUCHED) {
         if (_ta->isPaused(sensorNumber)) {
           _ta->resumeTrack(sensorNumber);
-          _tc->logAction("resume track ", sensorNumber);
+          _tc->logAction("resume track ", sensorNumber+1);
         } else {
           if (!_continueTrack)
             _ta->cancelFades(sensorNumber);
           _ta->startTrack(sensorNumber);
-          _tc->logAction("start track ", sensorNumber);
+          _tc->logAction("start track ", sensorNumber+1);
         }
         _trackCurrentlyPlaying = sensorNumber;
         break;
@@ -309,10 +319,10 @@ void Tactile::_proximityLoop() {
         if (!playing) {
           if (_ta->isPaused(sensorNumber)) {
             _ta->resumeTrack(sensorNumber);
-            _tc->logAction("resume ", sensorNumber);
+            _tc->logAction("resume ", sensorNumber+1);
           } else {
             _ta->startTrack(sensorNumber);
-            _tc->logAction("play ", sensorNumber);
+            _tc->logAction("play ", sensorNumber+1);
           }
         }
         _ta->setVolume(sensorNumber, sensorValue);
@@ -321,10 +331,10 @@ void Tactile::_proximityLoop() {
         if (playing) {
           if (_continueTrack) {
             _ta->pauseTrack(sensorNumber);
-            _tc->logAction("pause ", sensorNumber);
+            _tc->logAction("pause ", sensorNumber+1);
           } else {
             _ta->stopTrack(sensorNumber);
-            _tc->logAction("stop ", sensorNumber);
+            _tc->logAction("stop ", sensorNumber+1);
           }
           _ta->setVolume(sensorNumber, 0);
           _lastActionTime = millis();

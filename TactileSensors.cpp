@@ -33,8 +33,8 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
 
   // Note: it might seem like this could be a static object declared at the
   // program start, but that doesn't work due to some out-of-sequence
-  // operations that would occur before the BareTouch board is ready. By
-  // creating the TactileSensors object dynamically during the Arduino setup()
+  // operations that would occur before the hardware is ready. By creating
+  // the TactileSensors object dynamically during the Arduino setup()
   // function, we avoid those problems.
 
   TactileSensors* t = new TactileSensors(tc);
@@ -49,6 +49,7 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
     t->setTouchReleaseThresholds(sensorNumber, 95.0, 65.0);
   }
   t->_lastSensorTouched = -1;
+  t->_touchToggleMode = false;
 
   t->setAveragingStrength(200);
 
@@ -57,9 +58,11 @@ TactileSensors* TactileSensors::setup(TactileCPU *tc) {
 
 
 /*----------------------------------------------------------------------
- * Touch system: was a key touched or released? Touch is exclusive; only
- * one sensor will be considered touched at a time. If two or more are
- * touched, the following rules are used:
+ * Touch system: was a key touched or released?
+ *
+ * If multi-touch is not enabled, touch is exclusive; only one sensor will
+ * be considered touched at a time. If two or more are touched, the
+ * following rules are used:
  *
  *   1. First touched excludes others until it is released
  *   2. Simultaneous touch (two or more): the lowest-numbered sensor
