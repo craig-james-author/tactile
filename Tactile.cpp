@@ -88,6 +88,10 @@ void Tactile::setContinueTrackMode(boolean on) {
   _continueTrack = on;
 }
 
+void Tactile::setLoopMode(boolean on) {
+  _ta->setLoopMode(on);
+}
+
 void Tactile::setInactivityTimeout(int seconds) {
   if (seconds < 0)
     seconds = 0;

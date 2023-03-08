@@ -47,6 +47,7 @@ class TactileAudio
   void cancelFades(int trackNumber);
 
   void setPlayRandomTrackMode(bool r);
+  void setLoopMode(bool on);
 
   void startTrack(int sensorNumber);
   void stopTrack(int sensorNumber);
@@ -72,6 +73,7 @@ class TactileAudio
   int _fadeOutTime;
 
   bool _randomTrackMode;
+  bool _loopMode;
 
   // Audio player status (per track)
   uint32_t _lastStartTime[NUM_TRACKS];

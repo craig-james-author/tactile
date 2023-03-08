@@ -43,6 +43,7 @@ class Tactile
   void setTouchToStop(bool on);                // true == touch-on-touch-off (normally touch-on-release-off)
   void setMultiTrackMode(bool on);             // true == enable multiple simultaneous tracks
   void setContinueTrackMode(bool on);          // true == 2nd touch continues track where it left off
+  void setLoopMode(bool on);                   // true == track restarts (loops) when end reached
   void setInactivityTimeout(int seconds);      // continueTrackMode: reset to beginning if idle this long
 
   void setPlayRandomTrackMode(bool on);        // true == random selection from sensor's directory

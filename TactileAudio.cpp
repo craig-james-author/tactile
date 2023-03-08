@@ -60,6 +60,7 @@ TactileAudio* TactileAudio::setup(TactileCPU *tc) {
   t->_fadeOutTime         = 0;
   t->setVolume(100);
   t->_randomTrackMode     = false;
+  t->_loopMode            = false;
 
   for (int trackNumber = 0; trackNumber < NUM_TRACKS; trackNumber++) {
     t->_targetVolume[trackNumber]          = 100;
@@ -78,7 +79,7 @@ TactileAudio* TactileAudio::setup(TactileCPU *tc) {
 #define SDCARD_SCK_PIN   14
   AudioMemory(2*NUM_TRACKS+4);
   sgtl5000.enable();
-  sgtl5000.volume(0.5);
+  sgtl5000.volume(0.90);
   delay(1000);  // wait for SGTL5000 to initialize
 
   for (int i = 0; i < 4; i++) {
@@ -166,6 +167,10 @@ int TactileAudio::cancelAll() {
 
 void TactileAudio::setPlayRandomTrackMode(bool r) {
   _randomTrackMode = r;
+}
+
+void TactileAudio::setLoopMode(bool on) {
+  _loopMode = on;
 }
 
 AudioPlaySdWavPR *TactileAudio::_getPlayerByTrack(int trackNumber) {
@@ -448,10 +453,18 @@ void TactileAudio::doTimerTasks()
     if (_lastStartTime[trackNumber] > 0) {
       AudioPlaySdWavPR *player = _getPlayerByTrack(trackNumber);
       if (!player) return;
-      if (!player->isPlaying()) {
-        _lastStartTime[trackNumber] = 0;
-        _lastStopTime[trackNumber] = millis();
-        _tc->logAction2("TactileAudio: reached end, stopped track ", trackNumber);
+      uint32_t now = millis();
+      if (now - _lastStartTime[trackNumber] > 50) {  // Player doesn't reliably report isPlaying() for a
+        if (!player->isPlaying()) {                  // few msec, so if it just started playing, skip this.
+          if (_loopMode) {
+            startTrack(trackNumber);
+            _tc->logAction2("end of track, looping: ", trackNumber);
+          } else {
+            _lastStartTime[trackNumber] = 0;
+            _lastStopTime[trackNumber] = now;
+            _tc->logAction2("end of track ", trackNumber);
+          }
+        }
       }
     }
   }
