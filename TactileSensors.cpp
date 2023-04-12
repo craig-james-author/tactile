@@ -96,6 +96,10 @@ void TactileSensors::setTouchReleaseThresholds(int sensorNumber, float touchThre
   else
     _releaseThreshold[sensorNumber] = releaseThreshold;
 
+  if (_tc->getLogLevel() > 1) {
+    Serial.print(sensorNumber);
+    Serial.print(": ");
+  }
   _tc->logAction2("TactileSensors: Touch threshold: ", _touchThreshold[sensorNumber]);
   _tc->logAction2("TactileSensors: Release threshold: ", _releaseThreshold[sensorNumber]);
 }  

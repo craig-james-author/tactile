@@ -51,7 +51,7 @@ void Tactile::setVolume(int percent) {
 }
 
 void Tactile::setTouchReleaseThresholds(int touch, int release) {
-  for (int s = 0; s < NUM_SENSORS; s++)
+  for (int s = 1; s <= NUM_SENSORS; s++)                // note: external sensor number 1..N
     setTouchReleaseThresholds(s, touch, release);
 }
 
