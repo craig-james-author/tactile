@@ -171,7 +171,7 @@ int TactileFileManager::_readDirIntoStringArray(File *dir, int subDirNum)
 const char *TactileFileManager::getFileName(int fileNum)
 {
   if (fileNum < 0 || fileNum >= NUM_TRACKS) {
-    _tc->log("TactileFileManager: fileNum out of range");
+    _tc->logAction("TactileFileManager: getFileName(fileNum): fileNum out of range", fileNum);
     return NULL;
   }
   return _fileNames[fileNum];
@@ -181,11 +181,11 @@ const char *TactileFileManager::getFileName(int fileNum)
 const char *TactileFileManager::getFileName(int dirNum, int fileNum)
 {
   if (dirNum < 0 || dirNum >= NUM_SUBDIRS) {
-    _tc->log("TactileFileManager: dirNum out of range");
+    _tc->logAction("TactileFileManager: getFileName(dirNum, fileNum): dirNum out of range: ", dirNum);
     return NULL;
   }
-  if (fileNum < 0 || fileNum >= NUM_TRACKS) {
-    _tc->log("TactileFileManager: fileNum out of range");
+  if (fileNum < 0 || fileNum >= _numSubDirFiles[dirNum]) {
+    _tc->logAction("TactileFileManager: getFileName(dirNum, fileNum): fileNum out of range: ", fileNum);
     return NULL;
   }
   return _subDirFileNames[dirNum][fileNum];
@@ -193,7 +193,7 @@ const char *TactileFileManager::getFileName(int dirNum, int fileNum)
 
 int TactileFileManager::getNumFiles(int dirNum) {
   if (dirNum < 0 || dirNum >= NUM_SUBDIRS) {
-    _tc->log("TactileFileManager: dirNum out of range");
+    _tc->log("TactileFileManager: getNumFiles(): dirNum out of range");
     return -1;
   }
   return _numSubDirFiles[dirNum];
